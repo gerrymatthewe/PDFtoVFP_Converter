@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>Hierarchy</customSettingsType>
+    <description>This object determines the custom settings for the PDF to VFP converter that may vary based on the orgs preferences.</description>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>PDF_Master_CSS_File__c</fullName>
+        <description>The name of the static resource for the CSS file that controls the look and feel of the generated PDFs</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The name of the static resource for the CSS file that controls the look and feel of the generated PDFs</inlineHelpText>
+        <label>PDF Master CSS File</label>
+        <length>255</length>
+        <required>true</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>PDF to VFP Settings</label>
+    <visibility>Public</visibility>
+</CustomObject>
