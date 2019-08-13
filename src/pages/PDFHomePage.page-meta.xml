@@ -4,9 +4,4 @@
     <availableInTouch>false</availableInTouch>
     <confirmationTokenRequired>false</confirmationTokenRequired>
     <label>PDFHomePage</label>
-    <packageVersions>
-        <majorNumber>7</majorNumber>
-        <minorNumber>0</minorNumber>
-        <namespace>dsfs</namespace>
-    </packageVersions>
 </ApexPage>

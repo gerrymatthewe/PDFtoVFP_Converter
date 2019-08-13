@@ -3,29 +3,28 @@
  * Created by: Matt Gerry -- 06/17/2018
  */
 
-global class PDFtoVFGenerator
+global class PDFtoVFP_Generator
 {
     public List<String> profileNames {get; set;}
     public String sfURL {get;set;}
 
     public static String salesforceHost = System.Url.getSalesforceBaseURL().toExternalForm();
-    public static String url =  salesforceHost + '/services/data/v35.0/sobjects/ApexPage';
+    public static String toolingAPIURL =  salesforceHost + '/services/data/v35.0/sobjects/ApexPage';
     public static String[] profilesToUpdate;
     public static Boolean folderCreated = false;
-    public static String folderId;
-    
-    public PDFtoVFGenerator()
+
+    public PDFtoVFP_Generator()
     {
-        profileNames = GetProfileNames();
+        profileNames = getProfileNames();
         sfURL = ApexPages.currentPage().getHeaders().get('Host');
     }
     
-    public List<String> GetProfileNames()
+    public List<String> getProfileNames()
     {
         List<String> profNames = new List<String>();
-        List<gAuto__Profiles_For_PDF_Converter__c> profs = [SELECT gAuto__Profile_Name__c FROM gAuto__Profiles_For_PDF_Converter__c ORDER BY Name];
+        List<gAuto__PDFtoVFP_Profiles_For_PDF_Converter__c> profs = [SELECT gAuto__Profile_Name__c FROM gAuto__PDFtoVFP_Profiles_For_PDF_Converter__c ORDER BY Name];
         
-        for(gAuto__Profiles_For_PDF_Converter__c prof: profs)
+        for(gAuto__PDFtoVFP_Profiles_For_PDF_Converter__c prof: profs)
         {
             profNames.add(prof.gAuto__Profile_Name__c);
         }
@@ -53,7 +52,9 @@ global class PDFtoVFGenerator
     @RemoteAction
     webservice static String insertFolder(String pdfName)
     {
-        List<ContentWorkspace> workspaceLibraries = [SELECT Id FROM ContentWorkspace WHERE Name = 'PDF to VFP Library' LIMIT 1];
+        gAuto__PDF_to_VFP_Settings__c pdfSettings = gAuto__PDF_to_VFP_Settings__c.getOrgDefaults();
+        System.debug('This is the folder name ::: ' + pdfSettings.gAuto__Content_Library_Name__c);
+        List<ContentWorkspace> workspaceLibraries = [SELECT Id FROM ContentWorkspace WHERE Name = :pdfSettings.gAuto__Content_Library_Name__c LIMIT 1];
 
         if(!workspaceLibraries.isEmpty())
         {
@@ -61,7 +62,7 @@ global class PDFtoVFGenerator
 
             if(!workspaceLibraryLink.isEmpty())
             {
-                if(!PDFtoVFGenerator.folderCreated)
+                if(!PDFtoVFP_Generator.folderCreated)
                 {
                     ContentFolder newFolder = new ContentFolder();
                     newFolder.Name = pdfName;
@@ -79,7 +80,8 @@ global class PDFtoVFGenerator
     @RemoteAction
     webservice static String insertContentDocument(String pdfName, Integer imgNum, String fileContent, Id folderId)
     {
-        List<ContentWorkspace> workspaceLibraries = [SELECT Id FROM ContentWorkspace WHERE Name = 'PDF to VFP Library' LIMIT 1];
+        gAuto__PDF_to_VFP_Settings__c pdfSettings = gAuto__PDF_to_VFP_Settings__c.getOrgDefaults();
+        List<ContentWorkspace> workspaceLibraries = [SELECT Id FROM ContentWorkspace WHERE Name = :pdfSettings.gAuto__Content_Library_Name__c LIMIT 1];
 
         if(!workspaceLibraries.isEmpty())
         {
@@ -137,16 +139,16 @@ global class PDFtoVFGenerator
     @RemoteAction
     webservice static void VFToolingManager(Id pageId, String selectedProfiles)
     {
-        PDFtoVFGenerator.profilesToUpdate = selectedProfiles.split(',');
         gAuto__PDF_to_VFP_Settings__c pdfSettings = gAuto__PDF_to_VFP_Settings__c.getOrgDefaults();
+        PDFtoVFP_Generator.profilesToUpdate = selectedProfiles.split(',');
 
-        System.debug('Profiles ::: ' + PDFtoVFGenerator.profilesToUpdate);
+        System.debug('Profiles ::: ' + PDFtoVFP_Generator.profilesToUpdate);
         
         //Setting up the base for the html body of the vf page
         String vfBody = '<apex:page applyHtmlTag=\\"true\\" docType=\\"html-5.0\\" showHeader=\\"false\\" sidebar=\\"false\\" standardStylesheets=\\"false\\"> \\n <html> ';
         
         //Searching for our pdf, setting up the base of our css, searching for pdfPages
-        gAuto__PDF__c pdfFound = [SELECT Id, gAuto__VFPageId__c, Name, gAuto__Background_Color__c, gAuto__Page_Numbers__c FROM gAuto__PDF__c WHERE Id = :pageId];
+        gAuto__PDF__c pdfFound = [SELECT Id, gAuto__VFPageId__c, Name FROM gAuto__PDF__c WHERE Id = :pageId];
         vfBody = vfBody + '\\n \\t <head>  \\n \\t \\t <apex:stylesheet value=\\"{!$Resource.' + pdfSettings.gAuto__PDF_Master_CSS_File__c + '}\\"/> \\n \\t</head> \\n \\n \\t <body class=\\"pdfContainer\\"> \\n \\t \\t <div class=\\"pageContainer\\"><!--divAdd--> \\n \\t \\t </div> \\n \\t </body>';
         List<gAuto__PDFPage__c> pdfPages = [SELECT Id, Name, gAuto__Page_Number__c, gAuto__PDF__c, gAuto__Image_URL__c FROM gAuto__PDFPage__c WHERE gAuto__PDF__c = :pageId ORDER BY gAuto__Page_Number__c ASC];
         System.debug('Pages :::' + pdfPages.size());
@@ -163,11 +165,11 @@ global class PDFtoVFGenerator
         //If a page has already been created, delete it.
         if(pdfFound.VFPageId__c != null)
         {
-            PDFtoVFGenerator.deleteVFPage(pdfFound.gAuto__VFPageId__c);
+            PDFtoVFP_Generator.deleteVFPage(pdfFound.gAuto__VFPageId__c);
         }
         
         //Create the new vf page
-        PDFtoVFGenerator.createVFPage(vfBody, pdfFound.Name, pdfFound);
+        PDFtoVFP_Generator.createVFPage(vfBody, pdfFound.Name, pdfFound);
     }
 
     @RemoteAction
@@ -222,86 +224,62 @@ global class PDFtoVFGenerator
     webservice static void deleteVFPage(String pageId)
     {
         HttpRequest req = new HttpRequest();
-        String deleteURL = url+'/' + pageId ;
+        String deleteURL = toolingAPIURL+'/' + pageId ;
         req.setMethod('DELETE');
         req.setEndpoint(deleteURL);
         req.setHeader('Content-type', 'application/json');
-        String adminSession = RunPDFGenAsAdmin.getAdminSessionId();
+        String adminSession = PDFtoVFP_Generator.getAdminSessionId();
         req.setHeader('Authorization', 'Bearer ' + adminSession);
         Http http = new Http();
-        
-        if(!Test.isRunningTest())
-        {
-            HTTPResponse res = http.send(req);
-            System.debug(res.getBody());
-        }
+        HTTPResponse res = http.send(req);
+        System.debug(res.getBody());
     }
     
     //Method used to create our new vf page using the tooling api
     webservice static void createVFPage(String pageBody, String pageName, gAuto__PDF__c pageToUpdate)
     {
+        gAuto__PDF_to_VFP_Settings__c pdfSettings = gAuto__PDF_to_VFP_Settings__c.getOrgDefaults();
         HttpRequest req = new HttpRequest();
         req.setMethod('POST');
-        req.setEndpoint(url);
+        req.setEndpoint(toolingAPIURL);
         req.setHeader('Content-type', 'application/json');
-        String adminSession = RunPDFGenAsAdmin.getAdminSessionId();
+        String adminSession = PDFtoVFP_Generator.getAdminSessionId();
         req.setHeader('Authorization', 'Bearer ' + adminSession);
         //for controllerType = >0 -- no controller
-        req.setBody('{"Name" : "' + pageName.replaceAll('\\s+', '') + '","Markup" : "'+ pageBody +'","ControllerType" : "0","MasterLabel":"'+pageName+'","ApiVersion":"43.0"}');         
+        req.setBody('{"Name" : "' + pageName.replaceAll('\\s+', '') + '","Markup" : "'+ pageBody +'","ControllerType" : "0","MasterLabel":"'+pageName+'","ApiVersion":"' + pdfSettings.gAuto__Apex_Version__c + '"}');
         Http http = new Http();
         System.debug('body ::: ' +pageBody);
-        
-        if(!Test.isRunningTest())
-        {
-            HTTPResponse res = http.send(req);
-            System.debug(res.getBody());
-            String vfPageId = res.getBody().substringBetween('{"id":"','","');
-            pageToUpdate.VFPageId__c = vfPageId;
-        }
+
+        HTTPResponse res = http.send(req);
+        System.debug(res.getBody());
+        String vfPageId = res.getBody().substringBetween('{"id":"','","');
+        pageToUpdate.VFPageId__c = vfPageId;
         
         pageToUpdate.Link_To_VF_Page__c = salesforceHost+'/apex/'+pageName.replaceAll('\\s+', '');
-        
-        
-        PDFtoVFGenerator.updateProfilePageAccess(pageName, pageToUpdate);
-    }
 
-    //Method used to interact with the metadata API and create profile access for the new VF page
-    webservice static void updateProfilePageAccess(String pageName, gAuto__PDF__c pageToUpdate)
-    {
-        //If you're not a system admin, add current user profile to the list of profiles to update
-        Profile prof = [SELECT Id, Name FROM Profile WHERE Id = :UserInfo.getProfileId()];
-        System.debug('Profile Name ::: ' + prof.Name);
-
-        if(prof.Name != 'System Administrator')
-        {
-            PDFtoVFGenerator.profilesToUpdate.add(prof.Name);
-        }
-
-        Boolean pageEnabled = false;
-        MetadataService.MetadataPort service = new MetadataService.MetadataPort();
-        service.SessionHeader = new MetadataService.SessionHeader_element();
-        service.SessionHeader.sessionId = RunPDFGenAsAdmin.getAdminSessionId();
-        MetadataService.IReadResult readResult = service.readMetadata('Profile', PDFtoVFGenerator.profilesToUpdate);
-        MetadataService.Metadata[] records = readResult.getRecords();
-        MetadataService.Profile[] profMetaList = new MetadataService.Profile[]{};
-
-        for(MetadataService.Metadata record: records)
-        {
-            pageEnabled = false;
-            MetadataService.Profile profileFound = (MetadataService.Profile)record;
-            profileFound.tabVisibilities = new MetadataService.ProfileTabVisibility[] {};
-            System.debug('Profile Found ::: ' + profileFound.fullName);
-            MetadataService.ProfileApexPageAccess pap = new MetadataService.ProfileApexPageAccess();
-            pap.apexPage = pageName;
-            pap.enabled = true;
-            profileFound.pageAccesses.add(pap);
-            profMetaList.add(profileFound);
-
-        }
-
-        MetadataService.SaveResult[] sr = service.updateMetadata(profMetaList);
-        System.debug('Save Result ::: ' + sr);
         update pageToUpdate;
+        Database.executeBatch(new PDFtoVFP_Grant_VF_Page_Access(PDFtoVFP_Generator.profilesToUpdate, pageName), 5);
     }
-    
+
+    webservice static string getAdminSessionId()
+    {
+        gAuto__PDF_to_VFP_Admin_Credentials__c appLogin = gAuto__PDF_to_VFP_Admin_Credentials__c.getOrgDefaults();
+        String sessionId = '';
+
+        HttpRequest req = new HttpRequest();
+        req.setMethod('POST');
+        req.setEndpoint(appLogin.gAuto__App_Authentication_Base_URL__c + '?grant_type='+ appLogin.gAuto__Grant_Type__c +'&client_secret='+appLogin.gAuto__Client_Secret__c+'&client_id='+appLogin.gAuto__Client_Id__c+'&username='+appLogin.gAuto__Username__c+'&password='+appLogin.gAuto__Password__c+appLogin.gAuto__Security_Token__c+'&format=json');
+
+        req.setHeader('Content-Type', 'application/x-www-form-urlencoded');
+        Http http = new Http();
+
+
+        HTTPResponse res = http.send(req);
+        System.debug('appResponse ::: '+res.getBody());
+
+        String response = res.getBody();
+        sessionId = response.substringBetween('{"access_token":"', '","');
+        System.debug('token:::' + sessionId);
+        return sessionId;
+    }
 }

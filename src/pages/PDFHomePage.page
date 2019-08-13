@@ -4,25 +4,19 @@
     Created by: Matt Gerry -- 06/17/2018
 -->
 
-<apex:page docType="html-5.0" controller="PDFtoVFGenerator" sidebar="false" standardStylesheets="false" showHeader="false">
+<apex:page docType="html-5.0" controller="PDFtoVFP_Generator" sidebar="false" standardStylesheets="false" showHeader="false">
     <html>
         <head>
-
             <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js" />
             <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" />
             <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" />
-            <script type="text/javascript" src="https://cdn.rawgit.com/eligrey/FileSaver.js/5ed507ef8aa53d8ecfea96d96bc7214cd2476fd2/FileSaver.min.js" />
             <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsforce/1.7.0/jsforce.js" />
             <script type="text/javascript" src="../../soap/ajax/43.0/connection.js"/>
             <script type="text/javascript" src="../../soap/ajax/43.0/apex.js"/>
             <apex:includeScript value="{!$Resource.pdfJS}"/>
             <apex:includeScript value="{!$Resource.pdfJSWorker}"/>
-            <apex:includeScript value="{!$Resource.JSZip2}"/>
-            <apex:stylesheet value="{!$Resource.PDFHomePageCSS}"/>
-            <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js" />
-
             <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" rel="stylesheet" />
-            <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet" />
+            <apex:stylesheet value="{!$Resource.PDFtoVFP_PDF_HomePage_CSS}"/>
         </head>
 
         <body class="pageBody">
@@ -62,6 +56,26 @@
             </div>
         </div>
         <!--End loading box html-->
+
+        <!-- Modal -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModal" aria-hidden="true">
+            <div class="overlay-content">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Delete PDF Confirmation</h5>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you'd like to delete this pdf? This action is not reversible.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideDeleteModal();">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="deleteConvertedPDF();">Delete PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!--Main page html goes here-->
         <div id="homePageContainer">
@@ -84,24 +98,6 @@
             <h5 id="tableName"> Previously Converted PDFs </h5>
             <table id="tableHolder">
             </table>
-
-            <!-- Modal -->
-            <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModal" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">Delete PDF Confirmation</h5>
-                        </div>
-                        <div class="modal-body">
-                            Are you sure you'd like to delete this pdf? This action is not reversible.
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideDeleteModal();">Cancel</button>
-                            <button type="button" class="btn btn-primary" onclick="deleteConvertedPDF();">Delete PDF</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <input type="file" id="file-to-upload" style="display:none;" accept="application/pdf" />
             
@@ -138,6 +134,7 @@
                 __selected_Id,
                 __selected_Data,
                 __folder__Id,
+                __pdf_creation_errors = 0,
                 __created_PdfPage_Count = 0;
                 
             window.onload = setupPage;
@@ -151,7 +148,16 @@
                 __fileName = document.getElementById("file-to-upload").value;
                 __fileNameNoPath = __fileName.substring(__fileName.lastIndexOf("\\") + 1);
                 __fileNameNoSpace = __fileNameNoPath.replace(/\s/g, '');
-                __fileNameFinal = __fileNameNoSpace.replace(".pdf","")
+                __fileNameFinal = __fileNameNoSpace.replace(".pdf","");
+
+                __pdf_creation_errors = 0;
+                __created_PdfPage_Count = 0;
+                $('.circle-loader').removeClass('load-complete');
+                $('.circle-loader').removeClass('load-fail');
+                $('.checkmark').hide();
+                $('#pdfInfo').css({"color":"white"});
+                $('#failButton').hide();
+                $('#newVF').hide();
 
                 //Getting the pdfs data
                 PDFJS.getDocument({ url: pdf_url }).then(function(pdf_doc) 
@@ -240,14 +246,6 @@
                         var imgSource = imgElm.prop('src');
                         var finalSource = imgSource.replace("data:image/png;base64,", "");
                         var imgName = "Img" + __CURRENT_PAGE + ".png";
-
-
-                        //Setting up the page to the image in static resources for our pdfelement record
-                        //var elementPath = __fileNameFinal + ",'images/"+imgName+"')}";
-                        //var elementPath = __contentDocumentBasePath + contentDocumentLinkId;
-
-                        //Putting the image in our zip file image folder in base64 format
-                        //img.file(imgName, finalSource, {base64: true, compression: "DEFLATE", compressionOptions:{level: 2}});
                         
                         //If we still have pages to create, enter
                         if(__CURRENT_PAGE <= __TOTAL_PAGES)
@@ -279,7 +277,7 @@
             function insertPDFRecord(pdfName)
             {
                 Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFGenerator.insertPDF}',
+                    '{!$RemoteAction.PDFtoVFP_Generator.insertPDF}',
                     pdfName,
                     function(result, event)
                     {
@@ -287,9 +285,7 @@
                         if (event.type === 'exception')
                         {
                             console.log('The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result);
-                            deleteConvertedPDF();
-                            $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
-                            $('#failButton').show();
+                            __pdf_creation_errors++;
                         }
                         else
                         {
@@ -298,6 +294,7 @@
                             if(result === 'duplicate')
                             {
                                 $('#pdfInfo').html('A PDF with the same name has already been uploaded. PDF records must be unique. Please change the name of the PDF and re-upload it.');
+                                $('#pdfInfo').css({"color":"red"});
                                 $('#failButton').show();
                             }
                             else
@@ -315,7 +312,7 @@
             function insertContentFolder(pdfName)
             {
                 Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFGenerator.insertFolder}',
+                    '{!$RemoteAction.PDFtoVFP_Generator.insertFolder}',
                     pdfName,
                     function(result, event)
                     {
@@ -326,6 +323,7 @@
                             /*deleteConvertedPDF();
                             $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
                             $('#failButton').show();*/
+                            __pdf_creation_errors++;
                         }
                         else
                         {
@@ -346,7 +344,7 @@
             function insertContentDocuments(pdfName, imgNum, fileContent, totalImages, pdfPageName)
             {
                 Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFGenerator.insertContentDocument}',
+                    '{!$RemoteAction.PDFtoVFP_Generator.insertContentDocument}',
                     pdfName,
                     imgNum,
                     fileContent,
@@ -357,9 +355,7 @@
                         if (event.type === 'exception')
                         {
                             console.log('The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result);
-                            deleteConvertedPDF();
-                            $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
-                            $('#failButton').show();
+                            __pdf_creation_errors++;
                         }
                         else
                         {
@@ -375,7 +371,7 @@
             function insertPDFPage(pageName, pdfId, pageNum, imageURL)
             {
                 Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFGenerator.insertPDFPage}',
+                    '{!$RemoteAction.PDFtoVFP_Generator.insertPDFPage}',
                     pageName,
                     pdfId,
                     pageNum,
@@ -386,9 +382,7 @@
                         if (event.type === 'exception')
                         {
                             console.log('The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result);
-                            deleteConvertedPDF();
-                            $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
-                            $('#failButton').show();
+                            __pdf_creation_errors++;
                         }
                         else
                         {
@@ -396,7 +390,16 @@
                             console.log('This is the created pdf count ::: ' + __created_PdfPage_Count + ' ::: This is the total page count ::: ' + __TOTAL_PAGES);
                             if(__created_PdfPage_Count == __TOTAL_PAGES)
                             {
-                                createVFP();
+                                if(__pdf_creation_errors == 0)
+                                {
+                                    createVFP();
+                                }
+                                else
+                                {
+                                    deleteConvertedPDF();
+                                    $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
+                                    $('#failButton').show();
+                                }
                             }
                             console.log('The pdfPage was created successfully ::: ' + result);
                         }
@@ -408,10 +411,10 @@
 
             function createVFP()
             {
-                //Attempt to create the vf page by calling our apex method in the class PDFtoVFGenerator
+                //Attempt to create the vf page by calling our apex method in the class PDFtoVFP_Generator
                 $('#conversion-info').html('Attempting to generate VF Page.');
                 Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFGenerator.VFToolingManager}',
+                    '{!$RemoteAction.PDFtoVFP_Generator.VFToolingManager}',
                     __PDF_ID,
                     __profilesSelected,
                     function(result, event)
@@ -419,17 +422,15 @@
                         //If we hit an exception, inform user and rollback
                         if (event.type === 'exception')
                         {
-                            deleteConvertedPDF();
-
                             $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
                             $('#failButton').show();
+                            deleteConvertedPDF();
                         }
                         else
                         {
                             //Inform user the conversion was successful and show our new vf page
-                            $('#conversion-info').html('Conversion successful.');
-                            $('.circle-loader').toggleClass('load-complete');
-                            //$('.checkmark').toggle();
+                            $('#conversion-info').html('Conversion successful. Please allow up to 10 minutes for your selected profiles to gain access to your new visualforce page.');
+                            $('.circle-loader').addClass('load-complete');
                             $('#newVF').show();
                             loadPDFTable();
                         }
@@ -453,10 +454,10 @@
                     pdfIdToDelete = __PDF_ID;
                 }
 
-                //Attempt to create the vf page by calling our apex method in the class PDFtoVFGenerator
+                //Attempt to create the vf page by calling our apex method in the class PDFtoVFP_Generator
                 $('#conversion-info').html('Deleting converted Visualforce page.');
                 Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFGenerator.deletePDFFiles}',
+                    '{!$RemoteAction.PDFtoVFP_Generator.deletePDFFiles}',
                     pdfIdToDelete,
                     function(result, event)
                     {
@@ -470,7 +471,8 @@
                         {
                             //Inform user the conversion was successful and show our new vf page
                             $('#conversion-info').html('Delete successful.');
-                            $('.circle-loader').toggleClass('load-complete');
+                            $('.circle-loader').addClass('load-complete');
+                            $('.checkmark').show();
                             __PDF_ID = null;
                             __selected_Id = null;
                             if(__selected_Row)
@@ -533,7 +535,7 @@
                 document.getElementById("infoBox").style.height = "0%";
                 document.getElementById("loadingBox").style.height = "0%";
                 document.getElementById("profileSelection").style.height = "0%";                
-                $('.circle-loader').toggleClass('load-fail');
+                $('.circle-loader').addClass('load-fail');
                 $('#conversion-info').html('Now Converting Page 1');
                 $('#failButton').hide();
                 $('#upload-button').show();
@@ -556,7 +558,7 @@
                 var newURL = '/apex/' + __fileNameFinal;
                 window.open(newURL , '_blank'); 
                 document.getElementById("loadingBox").style.height = "0%";
-                $('.circle-loader').toggleClass('load-complete');
+                $('.circle-loader').addClass('load-complete');
                 $('#upload-button').show();
                 $('#tableHolder').show();
                 $('#tableName').show();

@@ -154,23 +154,10 @@
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <fields>
-        <fullName>Background_Color__c</fullName>
-        <defaultValue>&quot;rgb(211,211,211)&quot;</defaultValue>
-        <description>Background color of the pdf page. This is the color that appears behind the pages.</description>
-        <externalId>false</externalId>
-        <inlineHelpText>Please you a hex value to represent your color.</inlineHelpText>
-        <label>Background Color</label>
-        <length>16</length>
-        <required>false</required>
-        <trackHistory>false</trackHistory>
-        <trackTrending>false</trackTrending>
-        <type>Text</type>
-        <unique>false</unique>
-    </fields>
-    <fields>
         <fullName>Link_To_VF_Page__c</fullName>
-        <description>The link to vf page that was generated</description>
+        <description>The link to vf page that was generated.</description>
         <externalId>false</externalId>
+        <inlineHelpText>The link to vf page that was generated.</inlineHelpText>
         <label>Link To VF Page</label>
         <required>false</required>
         <trackHistory>false</trackHistory>
@@ -178,20 +165,10 @@
         <type>Url</type>
     </fields>
     <fields>
-        <fullName>Page_Numbers__c</fullName>
-        <defaultValue>true</defaultValue>
-        <description>If you want page numbers added to the vf pages, check this box</description>
-        <externalId>false</externalId>
-        <inlineHelpText>Would you like your pages numbered?</inlineHelpText>
-        <label>Page Numbers</label>
-        <trackHistory>false</trackHistory>
-        <trackTrending>false</trackTrending>
-        <type>Checkbox</type>
-    </fields>
-    <fields>
         <fullName>VFPageId__c</fullName>
-        <description>The Id of the VFPage Linked To The PDF</description>
+        <description>The Id of the VFPage Linked To The PDF.</description>
         <externalId>false</externalId>
+        <inlineHelpText>The Id of the VFPage Linked To The PDF.</inlineHelpText>
         <label>VFPageId</label>
         <length>18</length>
         <required>false</required>
