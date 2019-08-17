@@ -17,7 +17,7 @@ Sandbox Package URL: https://test.salesforce.com/packaging/installPackage.apexp?
 6) Create new at the custom setting Hierarchy level
 7) For apex page version put whatever version of Salesforce you are currently on (currently 46.0) or any previous version. 
 8) For System Admin Profile Name put the name of your System Administrator profile
-9) For PDF Master CSS File put: PDFtoVFP_Default_Generated_PDF_Page_CSS (you can change this css file at any point to change the look and feel of your generated pdfs)
+9) For PDF Master CSS File put: gAuto__PDFtoVFP_Default_Generated_PDF_Page_CSS (you can change this css file at any point to change the look and feel of your generated pdfs)
 10) For Content Library Name put the name of the content library you created in step 2
 11) Save the custom setting
 12) Go to Setup -> Custom Setting -> PDF to VFP Profiles for PDF Converter -> Manage
