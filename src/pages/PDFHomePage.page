@@ -7,15 +7,14 @@
 <apex:page docType="html-5.0" controller="PDFtoVFP_Generator" sidebar="false" standardStylesheets="false" showHeader="false">
     <html>
         <head>
-            <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js" />
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" />
-            <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" />
-            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsforce/1.7.0/jsforce.js" />
+            <script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js" />
+            <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" />
+            <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" />
             <script type="text/javascript" src="../../soap/ajax/43.0/connection.js"/>
             <script type="text/javascript" src="../../soap/ajax/43.0/apex.js"/>
             <apex:includeScript value="{!$Resource.pdfJS}"/>
             <apex:includeScript value="{!$Resource.pdfJSWorker}"/>
-            <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" rel="stylesheet" />
+            <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" />
             <apex:stylesheet value="{!$Resource.PDFtoVFP_PDF_HomePage_CSS}"/>
         </head>
 
@@ -69,6 +68,9 @@
                             Are you sure you'd like to delete this pdf? This action is not reversible.
                         </div>
                         <div class="modal-footer">
+                            <div id="delete-spinner" class="delete-spinner text-secondary" style="margin-right:50%;" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="hideDeleteModal();">Cancel</button>
                             <button type="button" class="btn btn-primary" onclick="deleteConvertedPDF();">Delete PDF</button>
                         </div>
@@ -88,7 +90,7 @@
               <div class="collapse navbar-collapse" id="navbarsExampleDefault">
                 <ul class="navbar-nav mr-auto">
                   <li class="nav-item active">
-                    <a class="nav-link" href="/">Return To Salesforce<span class="sr-only">(current)</span></a>
+                    <a class="nav-link" href="/">Return To Salesforce {!$User.FirstName} {!$User.LastName}<span class="sr-only">(current)</span></a>
                   </li>
                 </ul>
               </div>
@@ -443,6 +445,7 @@
             //If we hit an error we call this function and it deletes the pdf record, which in turn deletes all other records
             function deleteConvertedPDF()
             {
+                $("#delete-spinner").addClass("spinner-border");
                 var pdfIdToDelete = null;
 
                 if(__selected_Id)
@@ -472,14 +475,15 @@
                             //Inform user the conversion was successful and show our new vf page
                             $('#conversion-info').html('Delete successful.');
                             $('.circle-loader').addClass('load-complete');
-                            $('.checkmark').show();
                             __PDF_ID = null;
                             __selected_Id = null;
                             if(__selected_Row)
                             {
                                 $('#'+pdfIdToDelete).remove();
                             }
+
                             $("#deleteModal").hide();
+                            $("#delete-spinner").removeClass("spinner-border");
                         }
                     },
                     {
@@ -493,8 +497,11 @@
                 __selected_Row = rownum;
                 __selected_Id = pdfId;
 
-                $("#deleteModal").css({"top":"20%", "opacity":"100", "overflow":"inherit"});
+                $("#deleteModal").css({"opacity":"0"});
                 $("#deleteModal").show();
+                $("#deleteModal").animate({opacity:1});
+                $("#deleteModal").css({"top":"20%", "overflow":"inherit"});
+
             }
 
             function hideDeleteModal()
@@ -619,41 +626,39 @@
 
             function loadPDFTable()
             {
-                var state =
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.PDFtoVFP_Generator.getPDFs}',
+                    function(result, event)
                     {
-                        output: document.getElementById("tableHolder"),
-                        startTime: new Date().getTime()
-                    };
-
-                var callback =
+                        //If we hit an exception, inform user and rollback
+                        if (event.type === 'exception')
+                        {
+                            console.log('The pdfs could not be retrieved from the server because of the following error: ' + event.message + ' This is the result ::: ' + result);
+                        }
+                        else
+                        {
+                            console.log('The pdfs were successfully retrieved ::: ' + result);
+                            buildTable(result);
+                        }
+                    },
                     {
-                        onSuccess: buildTable,
-
-                        onFailure: queryFailed,
-
-                        source:state
-                    };
-
-                sforce.connection.query("SELECT Id, Name, gAuto__Link_To_VF_Page__c FROM gAuto__PDF__c ORDER BY Name", callback);
+                        escape: true
+                    });
             }
+
             
-            function queryFailed(error, source)
-            {
-                alert(error);
-            }
-            
-            function buildTable(queryResult, source)
+            function buildTable(queryResult)
             {
                 $("#tableHolder").empty();
 
-                $('#tableHolder').append('                <thead>\n' +
+                $('#tableHolder').append('<thead>\n' +
                     '                    <tr>\n' +
                     '                        <th>Remove</th>\n' +
                     '                        <th>View VF Page</th>\n' +
                     '                    </tr>\n' +
                     '                </thead>\n');
 
-                var pdfs = queryResult.getArray('records');
+                var pdfs = queryResult;
                 //alert(pdfs);
                 for(var i = 0; i<pdfs.length; i++)
                 {

@@ -41,6 +41,7 @@ public with sharing class ObjectCreator
         pdfSetting.gAuto__PDF_Master_CSS_File__c = 'PDFtoVFP_Default_Generated_PDF_Page_CSS';
         pdfSetting.gAuto__Apex_Version__c = '46.0';
         pdfSetting.gAuto__Content_Library_Name__c = 'PDF to VFP Library';
+        pdfSetting.gAuto__System_Admin_Profile_Name__c = 'System Administrator';
         pdfSettings.add(pdfSetting);
         insert pdfSettings;
         return pdfSettings;

@@ -34,6 +34,34 @@ public class PDFtoVFP_HTTP_Callout_Mock
         return resp;
     }
 
+    public static HttpCalloutMock generateToolingMock(Integer authResponseCode, String authResponseMsg, String authResponseBody, Integer mockCode, String mockResponseMsg, String mockResponseBody, String apexPageId)
+    {
+        String toolingURL = URL.getSalesforceBaseUrl().toExternalForm() + '/services/data/v35.0/sobjects/ApexPage';
+
+        if(apexPageId != null)
+        {
+            toolingURL +=  '/' + apexPageId;
+        }
+
+        Map<String, String> authHeaders = new Map<String, String>();
+        authHeaders.put('Content-Type', 'application/x-www-form-urlencoded');
+        PDFtoVFP_HTTP_Callout_Mock authResponse = new PDFtoVFP_HTTP_Callout_Mock(authResponseCode, authResponseMsg, authResponseBody, authHeaders);
+
+        Map<String, String> getHeaders = new Map<String, String>();
+        getHeaders.put('Content-Type', 'application/json');
+        getHeaders.put('Authorization', 'Bearer 00D1H000000Mzke!ARgAQC1mQ_3AXRbp5SCFneXWhlRTHYstC4tMrtWwhCwBIYFMoyF7m.0ne.d_vM5NxyuQATxGrf.aVX7hOhSh2djhm3BKAhqf');
+        PDFtoVFP_HTTP_Callout_Mock toolingResponse = new PDFtoVFP_HTTP_Callout_Mock(mockCode, mockResponseMsg, mockResponseBody, getHeaders);
+
+        System.debug('Tooling URL ::: ' + toolingURL);
+
+        Map<String, PDFtoVFP_HTTP_Callout_Mock> tooling_Mock_Endpoints = new Map<String, PDFtoVFP_HTTP_Callout_Mock>();
+        tooling_Mock_Endpoints.put('https://login.salesforce.com/services/oauth2/token?grant_type=password&client_secret=3679621402961549684&client_id=3MVG9nthuDc9owbdOQHwOGRCe54kl_.9e7TIWo0AYPp8zWMXU6yp6V.D.LvUfz_yVH2OQukhAPC.KgHzvNUNJ&username=dennywinnie@gmail.com&password=MommaJune19O4OwjBWIcrpfpoFpSjW05GqAh&format=json', authResponse);
+        tooling_Mock_Endpoints.put(toolingURL, toolingResponse);
+
+        HttpCalloutMock cemsCallouts = new PDFtoVFP_MultiRequestMock(tooling_Mock_Endpoints);
+        return cemsCallouts;
+    }
+
     public static String generateAdminSession_Response()
     {
         String response = '';

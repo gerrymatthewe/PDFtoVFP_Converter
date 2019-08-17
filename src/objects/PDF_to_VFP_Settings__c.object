@@ -4,6 +4,30 @@
     <description>This object determines the custom settings for the PDF to VFP converter that may vary based on the orgs preferences.</description>
     <enableFeeds>false</enableFeeds>
     <fields>
+        <fullName>Apex_Version__c</fullName>
+        <description>The version you want your apex pages generated at.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The version you want your apex pages generated at. Example as of Summer 2019 we were on version 46.0</inlineHelpText>
+        <label>Apex Page Version</label>
+        <length>6</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>Content_Library_Name__c</fullName>
+        <description>The name of the content library you would like your pdf data to be stored in.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The name of the content library you would like your pdf data to be stored in.</inlineHelpText>
+        <label>Content Library Name</label>
+        <length>255</length>
+        <required>false</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
         <fullName>PDF_Master_CSS_File__c</fullName>
         <description>The name of the static resource for the CSS file that controls the look and feel of the generated PDFs</description>
         <externalId>false</externalId>
@@ -11,6 +35,18 @@
         <label>PDF Master CSS File</label>
         <length>255</length>
         <required>true</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>System_Admin_Profile_Name__c</fullName>
+        <description>The name of the profile for system administrators in your org.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The name of the profile for system administrators in your org.</inlineHelpText>
+        <label>System Admin Profile Name</label>
+        <length>255</length>
+        <required>false</required>
         <trackTrending>false</trackTrending>
         <type>Text</type>
         <unique>false</unique>

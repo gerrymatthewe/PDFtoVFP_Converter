@@ -24,9 +24,4 @@ public with sharing class PDFtoVFP_MultiRequestMock implements HttpCalloutMock
                 return null;
             }
         }
-
-        public void addRequestMock(String url, PDFtoVFP_HTTP_Callout_Mock mock)
-        {
-            requests.put(url, mock);
-        }
 }

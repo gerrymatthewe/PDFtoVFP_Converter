@@ -22,37 +22,47 @@ global with sharing class PDFtoVFP_Grant_VF_Page_Access implements Database.Batc
     {
         //If you're not a system admin, add current user profile to the list of profiles to update
         Profile prof = [SELECT Id, Name FROM Profile WHERE Id = :UserInfo.getProfileId()];
+        gAuto__PDF_to_VFP_Settings__c pdfSettings = gAuto__PDF_to_VFP_Settings__c.getOrgDefaults();
+
         System.debug('Profile Name ::: ' + prof.Name);
 
-        if(prof.Name != 'System Administrator')
+        if(prof.Name != pdfSettings.gAuto__System_Admin_Profile_Name__c)
         {
             profilePassed.add(prof.Name);
         }
 
-        Boolean pageEnabled = false;
         MetadataService.MetadataPort service = new MetadataService.MetadataPort();
         service.SessionHeader = new MetadataService.SessionHeader_element();
-        service.SessionHeader.sessionId = PDFtoVFP_Generator.getAdminSessionId();
-        MetadataService.IReadResult readResult = service.readMetadata('Profile', profilePassed);
-        MetadataService.Metadata[] records = readResult.getRecords();
-        MetadataService.Profile[] profMetaList = new MetadataService.Profile[]{};
 
-        for(MetadataService.Metadata record: records)
+        String adminSession = null;
+        if(prof.Name != pdfSettings.gAuto__System_Admin_Profile_Name__c)
         {
-            pageEnabled = false;
-            MetadataService.Profile profileFound = (MetadataService.Profile)record;
-            profileFound.tabVisibilities = new MetadataService.ProfileTabVisibility[] {};
-            System.debug('Profile Found ::: ' + profileFound.fullName);
-            MetadataService.ProfileApexPageAccess pap = new MetadataService.ProfileApexPageAccess();
-            pap.apexPage = pageName;
-            pap.enabled = true;
-            profileFound.pageAccesses.add(pap);
-            profMetaList.add(profileFound);
-
+            adminSession = PDFtoVFP_Generator.getAdminSessionId();
+        }
+        else
+        {
+            adminSession = UserInfo.getSessionId();
         }
 
-        MetadataService.SaveResult[] sr = service.updateMetadata(profMetaList);
-        System.debug('Save Result ::: ' + sr);
+        service.SessionHeader.sessionId = adminSession;
+
+        if(!Test.isRunningTest())
+        {
+            MetadataService.IReadResult readResult = service.readMetadata('Profile', profilePassed);
+            MetadataService.Metadata[] records = readResult.getRecords();
+            MetadataService.Profile[] profMetaList = new MetadataService.Profile[]{};
+
+            for(MetadataService.Metadata record : records)
+            {
+                MetadataService.Profile profileFound = (MetadataService.Profile) record;
+                profileFound.tabVisibilities = new MetadataService.ProfileTabVisibility[]{};
+                System.debug('Profile Found ::: ' + profileFound.fullName);
+                MetadataService.ProfileApexPageAccess pap = new MetadataService.ProfileApexPageAccess(); pap.apexPage = pageName; pap.enabled = true; profileFound.pageAccesses.add(pap); profMetaList.add(profileFound);
+            }
+
+            MetadataService.SaveResult[] sr = service.updateMetadata(profMetaList);
+            System.debug('Save Result ::: ' + sr);
+        }
     }
 
     global void finish(Database.BatchableContext BC)
