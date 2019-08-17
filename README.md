@@ -2,9 +2,9 @@ The pdf to vfp converter allows you to take any PDF (up to 2GB in size) and conv
 easy to use UI. 
 It can be configured to be run by any user as a loop hole has been implemented to bypass the limitations of the Tooling API.
 
-Production Package URL: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOra
+Production Package URL: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrf
 
-Sandbox Package URL: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOra
+Sandbox Package URL: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrf
 
 To setup the PDF to VFP converter correctly follow the instruction below after installing the package:
 
