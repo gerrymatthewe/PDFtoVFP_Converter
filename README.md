@@ -5,9 +5,9 @@ It can be configured to be run by any user as a loop hole has been implemented t
 
 <h4>If you are converting extremely large files (>200 pages in length) it is recommended you use any browser aside from Chrome. Chrome will kill the page after around 250 pages.</h4>
 
-<p><b><i>Production Package URL: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrz
+<p><b><i>Production Package URL: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOs4
 
-Sandbox Package URL: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrz</i></b></p>
+Sandbox Package URL: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOs4</i></b></p>
 
 <b><i><u>To setup the PDF to VFP converter correctly follow the instruction below after installing the package:</u></i></b>
 
