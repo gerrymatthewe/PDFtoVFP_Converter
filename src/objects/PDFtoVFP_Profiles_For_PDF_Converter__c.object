@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customSettingsType>List</customSettingsType>
+    <description>The names of the profiles you want to give access to the converted visualforce pages automatically.</description>
+    <enableFeeds>false</enableFeeds>
+    <fields>
+        <fullName>Profile_Name__c</fullName>
+        <description>The name of the profile you would like to give automatic access to.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>The name of the profile you would like to give automatic access to.</inlineHelpText>
+        <label>Profile Name</label>
+        <length>255</length>
+        <required>true</required>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <label>PDF to VFP Profiles For PDF Converter</label>
+    <visibility>Public</visibility>
+</CustomObject>

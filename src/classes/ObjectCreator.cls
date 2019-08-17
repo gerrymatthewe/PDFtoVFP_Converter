@@ -42,6 +42,7 @@ public with sharing class ObjectCreator
         pdfSetting.gAuto__Apex_Version__c = '46.0';
         pdfSetting.gAuto__Content_Library_Name__c = 'PDF to VFP Library';
         pdfSetting.gAuto__System_Admin_Profile_Name__c = 'System Administrator';
+        pdfSetting.gAuto__Visualforce_Page_Base_URL__c = 'https://gmoney.na35.visual.force.com';
         pdfSettings.add(pdfSetting);
         insert pdfSettings;
         return pdfSettings;

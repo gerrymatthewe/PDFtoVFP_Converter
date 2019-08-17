@@ -300,19 +300,7 @@ global with sharing class PDFtoVFP_Generator
 		String vfPageId = res.getBody().substringBetween('{"id":"', '","');
 		pageToUpdate.VFPageId__c = vfPageId;
 
-		Organization orgFound = [SELECT NamespacePrefix FROM Organization];
-		String nameSpace = '--c';
-
-		if(orgFound != null)
-		{
-			if(orgFound.NamespacePrefix != null && orgFound.NamespacePrefix != '')
-			{
-				nameSpace = '--' + orgFound.NamespacePrefix;
-			}
-		}
-
-		String salesforceHostWithoutGAuto = salesforceHost.replace('--gauto', nameSpace);
-		pageToUpdate.Link_To_VF_Page__c = salesforceHostWithoutGAuto + '/apex/' + pageName.replaceAll('\\s+', '');
+		pageToUpdate.Link_To_VF_Page__c = pdfSettings.gAuto__Visualforce_Page_Base_URL__c + '/apex/' + pageName.replaceAll('\\s+', '');
 
 		update pageToUpdate;
 		Database.executeBatch(new PDFtoVFP_Grant_VF_Page_Access(PDFtoVFP_Generator.profilesToUpdate, pageName), 5);
