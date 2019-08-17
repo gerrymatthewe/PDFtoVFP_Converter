@@ -110,7 +110,11 @@ global with sharing class PDFtoVFP_Grant_VF_Page_Access implements Database.Batc
         mail.setPlainTextBody(htmlBody);
         List<Messaging.SingleEmailMessage> mails = new List<Messaging.SingleEmailMessage>();
         mails.add(mail);
-        Messaging.sendEmail(mails);
+
+        if(!Test.isRunningTest())
+        {
+            Messaging.sendEmail(mails);
+        }
 
         System.debug('Exit PDF to VFP profile updater finish method');
     }

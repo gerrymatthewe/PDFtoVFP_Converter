@@ -150,7 +150,7 @@ global with sharing class PDFtoVFP_Generator
 
 	//Method used to construct the vf page body based on the content of the pdf uploaded.
 	@RemoteAction
-	webservice static void VFToolingManager(Id pageId, String selectedProfiles)
+	webservice static String VFToolingManager(Id pageId, String selectedProfiles)
 	{
         if(Schema.sObjectType.gAuto__PDF__c.isAccessible() && Schema.sObjectType.gAuto__PDFPage__c.isAccessible())
         {
@@ -184,8 +184,11 @@ global with sharing class PDFtoVFP_Generator
             }
 
             //Create the new vf page
-            PDFtoVFP_Generator.createVFPage(vfBody, pdfFound.Name, pdfFound);
+            String urlForPage = PDFtoVFP_Generator.createVFPage(vfBody, pdfFound.Name, pdfFound);
+			return urlForPage;
         }
+
+		return null;
 	}
 
 	@RemoteAction
@@ -268,7 +271,7 @@ global with sharing class PDFtoVFP_Generator
 	}
 
 	//Method used to create our new vf page using the tooling api
-	private static void createVFPage(String pageBody, String pageName, gAuto__PDF__c pageToUpdate)
+	private static String createVFPage(String pageBody, String pageName, gAuto__PDF__c pageToUpdate)
 	{
 		Profile currentUsersProfile = [SELECT Id, Name FROM Profile WHERE Id = :UserInfo.getProfileId()];
 		gAuto__PDF_to_VFP_Settings__c pdfSettings = gAuto__PDF_to_VFP_Settings__c.getOrgDefaults();
@@ -298,12 +301,15 @@ global with sharing class PDFtoVFP_Generator
 		HTTPResponse res = http.send(req);
 		System.debug(res.getBody());
 		String vfPageId = res.getBody().substringBetween('{"id":"', '","');
-		pageToUpdate.VFPageId__c = vfPageId;
+		String urlForVFP = pdfSettings.gAuto__Visualforce_Page_Base_URL__c + '/apex/' + pageName.replaceAll('\\s+', '');
 
-		pageToUpdate.Link_To_VF_Page__c = pdfSettings.gAuto__Visualforce_Page_Base_URL__c + '/apex/' + pageName.replaceAll('\\s+', '');
+		pageToUpdate.VFPageId__c = vfPageId;
+		pageToUpdate.Link_To_VF_Page__c = urlForVFP;
 
 		update pageToUpdate;
 		Database.executeBatch(new PDFtoVFP_Grant_VF_Page_Access(PDFtoVFP_Generator.profilesToUpdate, pageName), 5);
+
+		return urlForVFP;
 	}
 
     @RemoteAction

@@ -137,7 +137,8 @@
                 __selected_Data,
                 __folder__Id,
                 __pdf_creation_errors = 0,
-                __created_PdfPage_Count = 0;
+                __created_PdfPage_Count = 0,
+                __new_PDF_Link;
                 
             window.onload = setupPage;
             sforce.connection.sessionId='{!GETSESSIONID()}';
@@ -433,6 +434,8 @@
                             //Inform user the conversion was successful and show our new vf page
                             $('#conversion-info').html('Conversion successful. Please allow up to 10 minutes for your selected profiles to gain access to your new visualforce page.');
                             $('.circle-loader').addClass('load-complete');
+                            __new_PDF_Link = result;
+                            console.log('The link to the new vf page is ::: ' + __new_PDF_Link);
                             $('#newVF').show();
                             loadPDFTable();
                         }
@@ -562,7 +565,7 @@
             //Used to pop a new tab with the new vf page
             function popVFPage()
             {
-                var newURL = '/apex/' + __fileNameFinal;
+                var newURL = __new_PDF_Link;
                 window.open(newURL , '_blank'); 
                 document.getElementById("loadingBox").style.height = "0%";
                 $('.circle-loader').addClass('load-complete');
