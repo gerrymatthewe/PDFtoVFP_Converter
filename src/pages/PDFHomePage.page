@@ -22,7 +22,7 @@
         <!--Info box html goes here, this is the first overlay-->
         <div id="profileSelection" class="overlay">
             <div id="profileNames" class="overlay-content">
-                <p id="profileInfo">Select the profiles you would like this visualforce page to be accessible to (You can only select 10 per transaction):</p>
+                <p id="profileInfo">Select the profiles you would like to give access to your new Visualforce page:</p>
                 <p id="profileErrors"></p>
                 <button type="button" class="btn btn-success" onclick="grabSelectedProfiles();" id="confirm-continue">Continue</button>
                 <button type="button" class="btn btn-danger" onclick="closeNav();" id="cancel-continue">Cancel</button>  
