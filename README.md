@@ -3,9 +3,9 @@
 easy to use UI. 
 It can be configured to be run by any user as a loop hole has been implemented to bypass the limitations of the Tooling API.</h4>
 
-<p><b><i>Production Package URL: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrf
+<p><b><i>Production Package URL: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrk
 
-Sandbox Package URL: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrf</i></b></p>
+Sandbox Package URL: https://test.salesforce.com/packaging/installPackage.apexp?p0=04t1H000000KOrk</i></b></p>
 
 <b><i><u>To setup the PDF to VFP converter correctly follow the instruction below after installing the package:</u></i></b>
 
