@@ -308,7 +308,9 @@
                         }
                     },
                     {
-                        escape: true
+                        buffer: false,
+                        escape: true,
+                        timeout: 120000
                     });
             }
 
@@ -340,7 +342,9 @@
                         }
                     },
                     {
-                        escape: true
+                        buffer: false,
+                        escape: true,
+                        timeout: 120000
                     });
             }
 
@@ -367,7 +371,9 @@
                         }
                     },
                     {
-                        escape: true
+                        buffer: false,
+                        escape: true,
+                        timeout: 120000
                     });
             }
 
@@ -408,7 +414,9 @@
                         }
                     },
                     {
-                        escape: true
+                        buffer: false,
+                        escape: true,
+                        timeout: 120000
                     });
             }
 
@@ -441,7 +449,9 @@
                         }
                     },
                     {
-                        escape: true
+                        buffer: false,
+                        escape: true,
+                        timeout: 120000
                     });
             }
             
@@ -490,7 +500,9 @@
                         }
                     },
                     {
-                        escape: true
+                        buffer: false,
+                        escape: true,
+                        timeout: 120000
                     });
             }
 
@@ -645,7 +657,9 @@
                         }
                     },
                     {
-                        escape: true
+                        buffer: false,
+                        escape: true,
+                        timeout: 120000
                     });
             }
 
