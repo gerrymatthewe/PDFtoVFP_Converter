@@ -1,5 +1,5 @@
 <html>
-<h4>The pdf to vfp converter allows you to take any PDF (up to 2GB in size) and convert it into a visual force page instantly via an extremely
+<h4>The pdf to vfp converter allows you to take any PDF (each PDF page can only be 2GB maximum in size, the PDF itself can be as large as your org has space technically) and convert it into a visual force page instantly via an extremely
 easy to use UI. 
 It can be configured to be run by any user as a loop hole has been implemented to bypass the limitations of the Tooling API.</h4>
 
