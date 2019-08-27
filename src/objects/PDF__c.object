@@ -143,6 +143,7 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
+    <deprecated>false</deprecated>
     <description>The master record for a pdf object. Used to take pdfs and turn them into vf pages. PDF records should be linked to/named after its corresponding vf page.</description>
     <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
@@ -155,6 +156,7 @@
     <enableStreamingApi>true</enableStreamingApi>
     <fields>
         <fullName>Link_To_VF_Page__c</fullName>
+        <deprecated>false</deprecated>
         <description>The link to vf page that was generated.</description>
         <externalId>false</externalId>
         <inlineHelpText>The link to vf page that was generated.</inlineHelpText>
@@ -166,6 +168,7 @@
     </fields>
     <fields>
         <fullName>VFPageId__c</fullName>
+        <deprecated>false</deprecated>
         <description>The Id of the VFPage Linked To The PDF.</description>
         <externalId>false</externalId>
         <inlineHelpText>The Id of the VFPage Linked To The PDF.</inlineHelpText>

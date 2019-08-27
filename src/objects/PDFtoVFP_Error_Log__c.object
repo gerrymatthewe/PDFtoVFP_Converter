@@ -143,68 +143,81 @@
     <allowInChatterGroups>false</allowInChatterGroups>
     <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
     <deploymentStatus>Deployed</deploymentStatus>
-    <deprecated>false</deprecated>
-    <description>These are the pages associated to a pdf object</description>
+    <description>This logs errors for the PDF to VFP Converter so it&apos;s easy to debug.</description>
     <enableActivities>true</enableActivities>
     <enableBulkApi>true</enableBulkApi>
     <enableFeeds>false</enableFeeds>
     <enableHistory>true</enableHistory>
     <enableLicensing>false</enableLicensing>
     <enableReports>true</enableReports>
-    <enableSearch>false</enableSearch>
+    <enableSearch>true</enableSearch>
     <enableSharing>true</enableSharing>
     <enableStreamingApi>true</enableStreamingApi>
     <fields>
-        <fullName>Image_URL__c</fullName>
-        <deprecated>false</deprecated>
-        <description>The URL of the image for the page</description>
+        <fullName>Date_of_Error__c</fullName>
+        <description>The date/time that the error occured.</description>
         <externalId>false</externalId>
-        <inlineHelpText>The URL of the image for the page</inlineHelpText>
-        <label>Image URL</label>
+        <inlineHelpText>The date/time that the error occured.</inlineHelpText>
+        <label>Date of Error</label>
         <required>false</required>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
-        <type>Url</type>
+        <type>DateTime</type>
     </fields>
     <fields>
-        <fullName>PDF__c</fullName>
-        <deprecated>false</deprecated>
-        <description>The pdf record related to the page</description>
+        <fullName>Internal_Error__c</fullName>
+        <description>The error we received from the server when trying take an action.</description>
         <externalId>false</externalId>
-        <label>PDF</label>
-        <referenceTo>PDF__c</referenceTo>
-        <relationshipLabel>PDFPages</relationshipLabel>
-        <relationshipName>PDFPages</relationshipName>
-        <relationshipOrder>0</relationshipOrder>
-        <reparentableMasterDetail>false</reparentableMasterDetail>
+        <inlineHelpText>The error we received from the server when trying take an action.</inlineHelpText>
+        <label>Internal Error</label>
+        <length>32768</length>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
-        <type>MasterDetail</type>
-        <writeRequiresMasterRead>false</writeRequiresMasterRead>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
     </fields>
     <fields>
-        <fullName>Page_Number__c</fullName>
-        <deprecated>false</deprecated>
-        <description>The order this page will be in the generated pdf</description>
+        <fullName>Operation_Attempted__c</fullName>
+        <description>This is the operation we attempted that resulted in an error.</description>
         <externalId>false</externalId>
-        <inlineHelpText>What page is this in the pdf?</inlineHelpText>
-        <label>Page Number</label>
-        <precision>3</precision>
-        <required>true</required>
-        <scale>0</scale>
+        <inlineHelpText>This is the operation we attempted that resulted in an error.</inlineHelpText>
+        <label>Operation Attempted</label>
+        <length>130000</length>
         <trackHistory>false</trackHistory>
         <trackTrending>false</trackTrending>
-        <type>Number</type>
-        <unique>false</unique>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
     </fields>
-    <label>PDFPage</label>
+    <fields>
+        <fullName>Original_Record_List__c</fullName>
+        <description>If we are altering a list of records, log it so we can compare and contrast the list updates.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>If we are altering a list of records, log it so we can compare and contrast the list updates.</inlineHelpText>
+        <label>Original Record List</label>
+        <length>131000</length>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>LongTextArea</type>
+        <visibleLines>3</visibleLines>
+    </fields>
+    <label>PDFtoVFP Error Log</label>
+    <listViews>
+        <fullName>All</fullName>
+        <columns>NAME</columns>
+        <columns>Date_of_Error__c</columns>
+        <columns>Internal_Error__c</columns>
+        <columns>Operation_Attempted__c</columns>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
     <nameField>
-        <label>PDFPage Name</label>
+        <displayFormat>ELOG-{000000}</displayFormat>
+        <label>PDFtoVFP Error Log Name</label>
         <trackHistory>false</trackHistory>
-        <type>Text</type>
+        <type>AutoNumber</type>
     </nameField>
-    <pluralLabel>PDFPages</pluralLabel>
+    <pluralLabel>PDFtoVFP Error Logs</pluralLabel>
     <searchLayouts/>
-    <sharingModel>ControlledByParent</sharingModel>
+    <sharingModel>ReadWrite</sharingModel>
     <visibility>Public</visibility>
 </CustomObject>

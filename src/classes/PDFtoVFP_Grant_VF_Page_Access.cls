@@ -35,9 +35,9 @@ global with sharing class PDFtoVFP_Grant_VF_Page_Access implements Database.Batc
         service.SessionHeader = new MetadataService.SessionHeader_element();
 
         String adminSession = null;
-        if(prof.Name != pdfSettings.gAuto__System_Admin_Profile_Name__c)
+        if(prof.Name != pdfSettings.gAuto__System_Admin_Profile_Name__c || Test.isRunningTest())
         {
-            adminSession = PDFtoVFP_Generator.getAdminSessionId();
+            adminSession = getAdminSessionId();
         }
         else
         {
@@ -117,5 +117,35 @@ global with sharing class PDFtoVFP_Grant_VF_Page_Access implements Database.Batc
         }
 
         System.debug('Exit PDF to VFP profile updater finish method');
+    }
+
+    private static string getAdminSessionId()
+    {
+        gAuto__PDF_to_VFP_Admin_Credentials__c appLogin = gAuto__PDF_to_VFP_Admin_Credentials__c.getOrgDefaults();
+        String sessionId = '';
+
+        HttpRequest req = new HttpRequest();
+        req.setMethod('POST');
+        req.setEndpoint(appLogin.gAuto__App_Authentication_Base_URL__c + '?grant_type=' + appLogin.gAuto__Grant_Type__c + '&client_secret=' + appLogin.gAuto__Client_Secret__c + '&client_id=' + appLogin.gAuto__Client_Id__c + '&username=' + appLogin.gAuto__Username__c + '&password=' + appLogin.gAuto__Password__c + appLogin.gAuto__Security_Token__c + '&format=json');
+
+        req.setHeader('Content-Type', 'application/x-www-form-urlencoded');
+        Http http = new Http();
+
+
+        HTTPResponse res;
+        try
+        {
+            res = http.send(req);
+        }
+        catch(Exception e)
+        {
+            PDFtoVFP_Generator.insertErrorLog(e.getMessage(), 'Attempted to get admin session id with this request ::: ' + req, null);
+        }
+        System.debug('appResponse ::: ' + res.getBody());
+
+        String response = res.getBody();
+        sessionId = response.substringBetween('{"access_token":"', '","');
+        System.debug('token:::' + sessionId);
+        return sessionId;
     }
 }

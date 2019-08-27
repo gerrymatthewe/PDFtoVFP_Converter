@@ -5,6 +5,7 @@
     <enableFeeds>false</enableFeeds>
     <fields>
         <fullName>Profile_Name__c</fullName>
+        <deprecated>false</deprecated>
         <description>The name of the profile you would like to give automatic access to.</description>
         <externalId>false</externalId>
         <inlineHelpText>The name of the profile you would like to give automatic access to.</inlineHelpText>

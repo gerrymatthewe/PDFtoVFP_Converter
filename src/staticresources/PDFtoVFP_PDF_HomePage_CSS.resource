@@ -24,6 +24,12 @@ a:hover
     background-color: #777887;
 }
 
+.checkBoxes
+{
+    color:white;
+    padding: 10px 15px 10px 10px;
+}
+
 #homePageContainer
 {
     text-align:center;

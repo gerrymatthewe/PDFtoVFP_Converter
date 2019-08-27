@@ -23,35 +23,39 @@
         <div id="profileSelection" class="overlay">
             <div id="profileNames" class="overlay-content">
                 <p id="profileInfo">Select the profiles you would like to give access to your new Visualforce page:</p>
+                <br />
+                    <input id="selectAllProfiles" class="checkBoxes" type="checkbox" name="Select all Profiles" value="Select All Profiles" />
+                    <label class="checkBoxes" for="selectAllProfiles">Select all Profiles</label>
+                <br />
                 <p id="profileErrors"></p>
                 <button type="button" class="btn btn-success" onclick="grabSelectedProfiles();" id="confirm-continue">Continue</button>
-                <button type="button" class="btn btn-danger" onclick="closeNav();" id="cancel-continue">Cancel</button>  
+                <button type="button" class="btn btn-danger" onclick="closeNav();" id="cancel-continue">Cancel</button>
             </div>
         </div>
         <!--End info box html-->
-        
+
         <!--Info box html goes here, this is the first overlay-->
         <div id="infoBox" class="overlay">
             <div class="overlay-content">
                 <canvas id="pdf-preview"></canvas>
                 <p id="pdfInfo"></p>
                 <button type="button" class="btn btn-success" onclick="beginConversion();" id="confirm-upload">Convert PDF</button>
-                <button type="button" class="btn btn-danger" onclick="closeNav();" id="cancel-upload">Cancel</button>  
+                <button type="button" class="btn btn-danger" onclick="closeNav();" id="cancel-upload">Cancel</button>
             </div>
         </div>
         <!--End info box html-->
-        
+
         <!--Loading box html goes here, this is the second overlay-->
         <div id="loadingBox" class="overlay">
             <div class="overlay-content">
-            
+
             <div class="circle-loader" id="loader">
               <div class="checkmark draw"></div>
             </div>
                 <p id="conversion-info"></p>
                 <button type="button" class="btn btn-success" onclick="popVFPage();" id="newVF">View new VF Page</button>
-                <button type="button" class="btn btn-danger" onclick="closeNav();" id="failButton">Cancel</button>  
-                
+                <button type="button" class="btn btn-danger" onclick="closeNav();" id="failButton">Cancel</button>
+
             </div>
         </div>
         <!--End loading box html-->
@@ -78,15 +82,16 @@
                 </div>
             </div>
         </div>
-        
+
         <!--Main page html goes here-->
         <div id="homePageContainer">
+
             <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
               <a class="navbar-brand" href="#">PDF to VFP Converter : </a>
               <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
               </button>
-        
+
               <div class="collapse navbar-collapse" id="navbarsExampleDefault">
                 <ul class="navbar-nav mr-auto">
                   <li class="nav-item active">
@@ -95,14 +100,14 @@
                 </ul>
               </div>
             </nav>
-            
-            <button type="button" class="btn btn-info btn-lg" id="upload-button">Convert a new PDF</button> 
+
+            <button type="button" class="btn btn-info btn-lg" id="upload-button">Convert a new PDF</button>
             <h5 id="tableName"> Previously Converted PDFs </h5>
             <table id="tableHolder">
             </table>
 
             <input type="file" id="file-to-upload" style="display:none;" accept="application/pdf" />
-            
+
             <!--Hidden canvas to load pdf data-->
             <div id="pdf-main-container">
                 <div id="pdf-contents">
@@ -112,49 +117,49 @@
             </div>
             <!--End hidden canvas-->
          </div>
-         <!--Main page html stops here-->   
+         <!--Main page html stops here-->
             <script>
-            
+
             //Setting up our list of global variables
-            
             var __PDF_DOC,
                 __CURRENT_PAGE,
                 __TOTAL_PAGES,
                 __PDF_ID,
-                __fileName,
-                __fileNameNoPath,
-                __fileNameNoSpace,
-                __fileNameFinal,
-                __profileNames = [],
-                __profilesSelected = '',
+                __FILE_NAME_FINAL,
+                __PROFILE_NAMES = [],
+                __PROFILES_SELECTED = '',
                 __CANVAS = $('#pdf-canvas').get(0),
                 __PREVIEW_CANVAS = $('#pdf-preview').get(0),
                 __PREVIEW_CTX = __PREVIEW_CANVAS.getContext('2d'),
                 __CANVAS_CTX = __CANVAS.getContext('2d'),
-                __contentDocumentBasePath = "/sfc/servlet.shepherd/version/download/",
-                __selected_Row,
-                __selected_Id,
-                __selected_Data,
-                __folder__Id,
-                __pdf_creation_errors = 0,
-                __created_PdfPage_Count = 0,
-                __new_PDF_Link;
-                
-            window.onload = setupPage;
-            sforce.connection.sessionId='{!GETSESSIONID()}';
+                __SELECTED_ROW,
+                __SELECTED_ID,
+                __SELECTED_DATA,
+                __FOLDER_ID,
+                __NEW_PDF_LINK,
+                __CONTENT_JSON,
+                __PAGES_PROCESSED;
             //End global variable setup
-            
-            //Function used to grab our pdf and utilizing pdf.js analyze it.
-            function showPDF(pdf_url) 
-            {               
-                //Building different variations of the file name for insertions later
-                __fileName = document.getElementById("file-to-upload").value;
-                __fileNameNoPath = __fileName.substring(__fileName.lastIndexOf("\\") + 1);
-                __fileNameNoSpace = __fileNameNoPath.replace(/\s/g, '');
-                __fileNameFinal = __fileNameNoSpace.replace(".pdf","");
 
-                __pdf_creation_errors = 0;
-                __created_PdfPage_Count = 0;
+
+            //On window load we are calling the setup page method to setup the table of PDFs that were previously converted
+            window.onload = setupPage;
+
+            //Getting out users session id, this is required for visualforce remoting
+            sforce.connection.sessionId='{!GETSESSIONID()}';
+
+            //Function used to grab our pdf. We then utilizing PDFJS to analyze the PDF
+            function showPDF(pdf_url)
+            {
+                //Building different variations of the file name for insertions later
+                 var fileName = document.getElementById("file-to-upload").value;
+                 var fileNameNoPath = fileName.substring(fileName.lastIndexOf("\\") + 1);
+                 var fileNameNoSpace = fileNameNoPath.replace(/\s/g, '');
+                __FILE_NAME_FINAL = fileNameNoSpace.replace(".pdf","");
+
+                //Resetting all our variables each time we start a pdf conversion
+                __PAGES_PROCESSED = 0;
+                __CONTENT_JSON = '{"ContentDocuments":{"documentsList":[';
                 $('.circle-loader').removeClass('load-complete');
                 $('.circle-loader').removeClass('load-fail');
                 $('.checkmark').hide();
@@ -163,13 +168,13 @@
                 $('#newVF').hide();
 
                 //Getting the pdfs data
-                PDFJS.getDocument({ url: pdf_url }).then(function(pdf_doc) 
+                PDFJS.getDocument({ url: pdf_url }).then(function(pdf_doc)
                 {
                     __PDF_DOC = pdf_doc;
                     __TOTAL_PAGES = __PDF_DOC.numPages;
-                    
-                    //Setting up out drop down ui
-                    $('#pdfInfo').html('Our PDF conversion algorithm has determined that your PDF ' + __fileNameNoPath + ' has ' + __TOTAL_PAGES + ' pages. \n Ready to convert?');
+
+                    //Setting up our drop down ui that shows the user a preview of the page they are about to convert
+                    $('#pdfInfo').html('Our PDF conversion algorithm has determined that your PDF ' + fileNameNoPath + ' has ' + __TOTAL_PAGES + ' pages. \n Ready to convert?');
                     showPreview();
                     openNav();
                     $('#upload-button').hide();
@@ -178,103 +183,184 @@
 
                 }).catch(function(error)
                 {
-                    alert(error.message);
+                    console.log(error.message);
                 });
             }
-            
+
             //Produces the image preview in the initial drop down ui. It loads an image of the first page into the canvas on the screen.
             function showPreview()
             {
-                __PDF_DOC.getPage(1).then(function(page) 
+                __PDF_DOC.getPage(1).then(function(page)
                 {
                     // As the canvas is of a fixed width we need to set the scale of the viewport accordingly
-            
+
                     // Get viewport of the page at required scale
                     var viewport = page.getViewport(0.25);
-            
+
                     // Set canvas height
                     __PREVIEW_CANVAS.height = viewport.height;
                     __PREVIEW_CANVAS.width = viewport.width;
-            
+
                     var renderContext = {
                         canvasContext: __PREVIEW_CTX,
                         viewport: viewport
                     };
-                    
+
                     // Render the page contents in the canvas
                     page.render(renderContext)
                 });
             }
-            
-            //Starts the actual conversion of the pdf into a vf page
+
+            //Starts the actual conversion of the pdf into a vf page, this is initiated by clicking the convert pdf button
             function beginConversion()
             {
-                insertPDFRecord(__fileNameFinal);
+                insertPDFRecord(__FILE_NAME_FINAL);
             }
-            
-            //This method loops through the pages and creates both images to store in a zip for static resouces and records for pdfPages and pdfElements
-            function showPage(page_no) 
+
+            //This method loops through the pages of the pdf, uses PDFJS to turn the pages into images and then upload those images as contentdocuments and provide references to those pages by creating pdfpages
+            function showPage(page_no)
             {
                 //Set current page
                 __CURRENT_PAGE = page_no;
-                
-                //Create img element to load into the page so we can translate the canvas url to an image for zipping
+
+                //Create img element to load into the page so we can translate the canvas url to an image
                 imgElm = $('<img id="'+page_no+'">');
                 imgElm.css("display","none");
-                
+
                 //Fetch the current page
-                __PDF_DOC.getPage(page_no).then(function(page) 
+                __PDF_DOC.getPage(page_no).then(function(page)
                 {
-            
+
                     // Get viewport of the page at required scale
                     var viewport = page.getViewport(1);
-            
+
                     // Set canvas height
                     __CANVAS.height = viewport.height;
                     __CANVAS.width = viewport.width;
-            
+
                     var renderContext = {
                         canvasContext: __CANVAS_CTX,
                         viewport: viewport
                     };
-                    
+
                     //Render the page contents in the canvas
-                    page.render(renderContext).then(function() 
+                    page.render(renderContext).then(function()
                     {
-                        //Turn canvas url into an image and append it to the page
+                        //Turn canvas url into an image
                         imgElm.attr("src", __CANVAS.toDataURL());
-                        //imgElm.appendTo("#loadedImgs");
-                        
+
                         //Setting up our image source data and our image name
                         var imgSource = imgElm.prop('src');
                         var finalSource = imgSource.replace("data:image/png;base64,", "");
-                        var imgName = "Img" + __CURRENT_PAGE + ".png";
-                        
+                        var imageLabel = __FILE_NAME_FINAL + ":::" +  __CURRENT_PAGE;
+
                         //If we still have pages to create, enter
                         if(__CURRENT_PAGE <= __TOTAL_PAGES)
                         {
                             //Letting the user know what page is currently converting
                             $('#conversion-info').html('Now Converting Page ' + __CURRENT_PAGE);
 
-                            insertContentDocuments(__fileNameFinal, __CURRENT_PAGE, finalSource, __TOTAL_PAGES, "Page"+__CURRENT_PAGE);
+                            //Setting up our JSON object to send back to the apex controller for it to interpret and transform into a contentdocument
+                             __CONTENT_JSON += '{"Title":"' + imageLabel + '", "VersionData":"' + finalSource + '", "PathOnClient":"' + imageLabel + '.png"}';
 
                             //iterate current page
                             __CURRENT_PAGE = __CURRENT_PAGE+1;
 
-                            //If we havent hit the final page, call showpage again and repeat the above process
-                            if(__CURRENT_PAGE <= __TOTAL_PAGES)
+                            //If there are still pages to convert, continue
+                            if (__CURRENT_PAGE <= __TOTAL_PAGES)
                             {
-                                showPage(__CURRENT_PAGE);
+                                //If we can divide the current pages by 3, continue. This is necessary due to a Salesforce limitation that a string can be no longer than 6 million characters. Because of the Base64 image blob we
+                                //are sending in the JSON object 3 images equates to around 6 million characters. Any amount greater than this will often cause the limit to be exceeded.
+                                if (__CURRENT_PAGE % 3 === 0)
+                                {
+                                    //Finishing up the JSON object
+                                    __CONTENT_JSON += "]}}";
+                                    var jsonToPass = __CONTENT_JSON;
+
+                                    //Resetting the global JSON object for the next pass
+                                    __CONTENT_JSON = '{"ContentDocuments":{"documentsList":[';
+
+                                    //Sending the json to this method so that it can be passed to the controller to be converted into pdfpages and contentdocuments
+                                    generateDocumentsAndPDFPages(jsonToPass, __CURRENT_PAGE);
+                                }
+                                //If we can't divide by three, continue generating the images and the JSON
+                                else
+                                {
+                                    showPage(__CURRENT_PAGE);
+                                    __CONTENT_JSON += ", ";
+                                }
+                            }
+                            //If our current page is greater than the total page count, enter
+                            else
+                            {
+                                //Finishing up our JSON and sending it to the controller to be converted into pdfpages and contentdocuments
+                                __CONTENT_JSON += ']}}';
+                                console.log('This is the content JSON String ::: ' + __CONTENT_JSON);
+                                //Letting the user know what page is currently converting
+                                $('#conversion-info').html('Finishing up converting pdf pages to content documents.');
+                                var jsonToPass = __CONTENT_JSON;
+                                generateDocumentsAndPDFPages(jsonToPass, true);
+                            }
+                        }
+
+                    });
+                });
+            }
+
+            //This method connects to the apex controller and generates contentdocuments and pdfpages
+            function generateDocumentsAndPDFPages(jsonPassed, currentPage)
+            {
+                //Parsing our JSON object so that we can inform the user of which pages are currently being converted to content documents
+                var contentObj = JSON.parse(jsonPassed);
+                var documentListSize = Object.keys(contentObj.ContentDocuments.documentsList).length;
+                var firstPage = __PAGES_PROCESSED + 1;
+                __PAGES_PROCESSED += documentListSize;
+                $('#conversion-info').html('Currently converting pages ' + firstPage + ' - ' + __PAGES_PROCESSED + ' into a content document.');
+
+                //Utilizing VF Remoting to insert our contentdocuments and pdfpages. The first parameter is the method name, the next parameters are the variables we pass to the method, the final parameter is the callback method
+                Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.PDFtoVFP_Generator.insertContentDocuments}',
+                        jsonPassed,
+                        __FOLDER_ID,
+                        __PDF_ID,
+                        function(result, event)
+                        {
+                            //If we hit an exception, inform user and rollback
+                            if (event.type === 'exception')
+                            {
+                                var errorMsg = 'Creating the content documents and pdf pages failed due to the following error: ' + event.message;
+                                pdfGenerationFailure(errorMsg);
                             }
                             else
                             {
-                                //Letting the user know what page is currently converting
-                                $('#conversion-info').html('Converting PDF images to Salesforce Files');
+                                if(result === "success")
+                                {
+                                    console.log("These are the pages processed: " + __PAGES_PROCESSED + ' ::: These are the total pages ::: ' + __TOTAL_PAGES);
+                                    if(__PAGES_PROCESSED === __TOTAL_PAGES)
+                                    {
+                                        //Inform user the conversion was successful and show our new vf page
+                                        $('#conversion-info').html('Attempting to generate Visualforce page.');
+                                        createVFP();
+                                    }
+                                    else
+                                    {
+                                        console.log('This is the result of the document insertions ::: ' + result);
+                                        showPage(currentPage);
+                                    }
+                                }
+                                else
+                                {
+                                    var errorMsg = 'Creating the content documents and pdf pages failed due to the following error: ' + result;
+                                    pdfGenerationFailure(errorMsg);
+
+                                }
                             }
-                        }
-                        
-                    });
-                });
+                        },
+                        {
+                            buffer: false,
+                            escape: true,
+                            timeout: 120000
+                        });
             }
 
             function insertPDFRecord(pdfName)
@@ -287,8 +373,8 @@
                         //If we hit an exception, inform user and rollback
                         if (event.type === 'exception')
                         {
-                            console.log('The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result);
-                            __pdf_creation_errors++;
+                           var errorMsg = 'The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result;
+                           pdfGenerationFailure(errorMsg);
                         }
                         else
                         {
@@ -299,6 +385,11 @@
                                 $('#pdfInfo').html('A PDF with the same name has already been uploaded. PDF records must be unique. Please change the name of the PDF and re-upload it.');
                                 $('#pdfInfo').css({"color":"red"});
                                 $('#failButton').show();
+                            }
+                            else if(result === 'fail')
+                            {
+                                var errorMsg = 'Creating the pdf document failed to be created due to the following error: ' + result;
+                                pdfGenerationFailure(errorMsg);
                             }
                             else
                             {
@@ -324,93 +415,25 @@
                         //If we hit an exception, inform user and rollback
                         if (event.type === 'exception')
                         {
-                            console.log('The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result);
-                            /*deleteConvertedPDF();
-                            $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
-                            $('#failButton').show();*/
-                            __pdf_creation_errors++;
+                            errorMsg = 'The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result;
+                            pdfGenerationFailure(errorMsg);
                         }
                         else
                         {
-                            console.log('The content folder was created successfully ::: ' + result);
-                            __folder__Id = result;
-                            //If successful we switch to our loading nav
-                            switchNav("infoBox","loadingBox");
+                            if(result !== 'fail') {
+                                console.log('The content folder was created successfully ::: ' + result);
+                                __FOLDER_ID = result;
+                                //If successful we switch to our loading nav
+                                switchNav("infoBox", "loadingBox");
 
-                            //Call the method to loop through the pages and create data based on them
-                            showPage(1);
-                        }
-                    },
-                    {
-                        buffer: false,
-                        escape: true,
-                        timeout: 120000
-                    });
-            }
-
-            function insertContentDocuments(pdfName, imgNum, fileContent, totalImages, pdfPageName)
-            {
-                Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFP_Generator.insertContentDocument}',
-                    pdfName,
-                    imgNum,
-                    fileContent,
-                    __folder__Id,
-                    function(result, event)
-                    {
-                        //If we hit an exception, inform user and rollback
-                        if (event.type === 'exception')
-                        {
-                            console.log('The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result);
-                            __pdf_creation_errors++;
-                        }
-                        else
-                        {
-                            console.log('The document was created successfully ::: ' + result);
-                            insertPDFPage(pdfPageName, __PDF_ID, imgNum,  __contentDocumentBasePath + result);
-                        }
-                    },
-                    {
-                        buffer: false,
-                        escape: true,
-                        timeout: 120000
-                    });
-            }
-
-            function insertPDFPage(pageName, pdfId, pageNum, imageURL)
-            {
-                Visualforce.remoting.Manager.invokeAction(
-                    '{!$RemoteAction.PDFtoVFP_Generator.insertPDFPage}',
-                    pageName,
-                    pdfId,
-                    pageNum,
-                    imageURL,
-                    function(result, event)
-                    {
-                        //If we hit an exception, inform user and rollback
-                        if (event.type === 'exception')
-                        {
-                            console.log('The file creation failed due to the following: ' + event.message + ' This is the result ::: ' + result);
-                            __pdf_creation_errors++;
-                        }
-                        else
-                        {
-                            __created_PdfPage_Count++;
-                            console.log('This is the created pdf count ::: ' + __created_PdfPage_Count + ' ::: This is the total page count ::: ' + __TOTAL_PAGES);
-                            if(__created_PdfPage_Count == __TOTAL_PAGES)
-                            {
-                                if(__pdf_creation_errors == 0)
-                                {
-                                    createVFP();
-                                }
-                                else
-                                {
-                                    deleteConvertedPDF();
-                                    $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
-                                    $('#failButton').show();
-                                }
+                                //Call the method to loop through the pages and create data based on them
+                                showPage(1)
                             }
-                            console.log('The pdfPage was created successfully ::: ' + result);
+                            else
+                            {
+                                var errorMsg = 'Creating the content folder failed to be inserted due to the following error: ' + result;
+                                pdfGenerationFailure(errorMsg);
+                            }
                         }
                     },
                     {
@@ -427,25 +450,32 @@
                 Visualforce.remoting.Manager.invokeAction(
                     '{!$RemoteAction.PDFtoVFP_Generator.VFToolingManager}',
                     __PDF_ID,
-                    __profilesSelected,
+                    __PROFILES_SELECTED,
                     function(result, event)
                     {
                         //If we hit an exception, inform user and rollback
                         if (event.type === 'exception')
                         {
-                            $('#conversion-info').html('Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message);
-                            $('#failButton').show();
-                            deleteConvertedPDF();
+                            var errorMsg = 'Rolling back data changes. The visualforce page was not successfully created due to the following error: ' + event.message;
+                            pdfGenerationFailure(errorMsg);
                         }
                         else
                         {
-                            //Inform user the conversion was successful and show our new vf page
-                            $('#conversion-info').html('Conversion successful. Please allow up to 10 minutes for your selected profiles to gain access to your new visualforce page.');
-                            $('.circle-loader').addClass('load-complete');
-                            __new_PDF_Link = result;
-                            console.log('The link to the new vf page is ::: ' + __new_PDF_Link);
-                            $('#newVF').show();
-                            loadPDFTable();
+                            if(result !== 'fail')
+                            {
+                                //Inform user the conversion was successful and show our new vf page
+                                $('#conversion-info').html('Conversion successful. You will receieve an email when all profiles have been given access to your new visualforce page.');
+                                $('.circle-loader').addClass('load-complete');
+                                __NEW_PDF_LINK = result;
+                                console.log('The link to the new vf page is ::: ' + __NEW_PDF_LINK);
+                                $('#newVF').show();
+                                loadPDFTable();
+                            }
+                            else
+                            {
+                                var errorMsg = 'Creating the pdf document failed due to the following error: ' + result;
+                                pdfGenerationFailure(errorMsg);
+                            }
                         }
                     },
                     {
@@ -454,16 +484,16 @@
                         timeout: 120000
                     });
             }
-            
+
             //If we hit an error we call this function and it deletes the pdf record, which in turn deletes all other records
             function deleteConvertedPDF()
             {
                 $("#delete-spinner").addClass("spinner-border");
                 var pdfIdToDelete = null;
 
-                if(__selected_Id)
+                if(__SELECTED_ID)
                 {
-                    pdfIdToDelete = __selected_Id;
+                    pdfIdToDelete = __SELECTED_ID;
                 }
                 else if(__PDF_ID)
                 {
@@ -489,8 +519,8 @@
                             $('#conversion-info').html('Delete successful.');
                             $('.circle-loader').addClass('load-complete');
                             __PDF_ID = null;
-                            __selected_Id = null;
-                            if(__selected_Row)
+                            __SELECTED_ID = null;
+                            if(__SELECTED_ROW)
                             {
                                 $('#'+pdfIdToDelete).remove();
                             }
@@ -508,9 +538,9 @@
 
             function checkDelete(fileName, rownum, pdfId)
             {
-                __selected_Data = fileName;
-                __selected_Row = rownum;
-                __selected_Id = pdfId;
+                __SELECTED_DATA = fileName;
+                __SELECTED_ROW = rownum;
+                __SELECTED_ID = pdfId;
 
                 $("#deleteModal").css({"opacity":"0"});
                 $("#deleteModal").show();
@@ -521,18 +551,18 @@
 
             function hideDeleteModal()
             {
-                __selected_Data = null;
-                __selected_Row = null;
-                __selected_Id = null;
+                __SELECTED_DATA = null;
+                __SELECTED_ROW = null;
+                __SELECTED_ID = null;
                 $("#deleteModal").hide();
             }
-            
+
             // Upon click this should should trigger click on the #file-to-upload file input element
             // This is better than showing the not-good-looking file input element
             $("#upload-button").on('click', function() {
                 $("#file-to-upload").trigger('click');
             });
-            
+
             // When user chooses a PDF file
             $("#file-to-upload").on('change', function() {
                 // Validate whether PDF
@@ -540,101 +570,104 @@
                     alert('Error : Not a PDF');
                     return;
                 }
-            
+
                 // Send the object url of the pdf
                 showPDF(URL.createObjectURL($("#file-to-upload").get(0).files[0]));
             });
-            
+
+            $("#selectAllProfiles").click(function () {
+                $(".profRows").prop('checked', $(this).prop('checked'));
+            });
+
             //Used to open the first drop down display
-            function openNav() 
+            function openNav()
             {
                 document.getElementById("profileSelection").style.height = "100%";
             }
-            
+
             //Used to close the current nav bar and reset relevant elements
-            function closeNav() 
+            function closeNav()
             {
                 document.getElementById("infoBox").style.height = "0%";
                 document.getElementById("loadingBox").style.height = "0%";
-                document.getElementById("profileSelection").style.height = "0%";                
+                document.getElementById("profileSelection").style.height = "0%";
                 $('.circle-loader').addClass('load-fail');
                 $('#conversion-info').html('Now Converting Page 1');
                 $('#failButton').hide();
                 $('#upload-button').show();
                 $('#tableHolder').show();
                 $('#tableName').show();
-                __profilesSelected = '';
-                __created_PdfPage_Count = 0;
+                __PROFILES_SELECTED = '';
             }
-            
+
             //Used to switch between the info nav and the loading nav
             function switchNav(divClosed, divOpened)
             {
                 document.getElementById(divClosed).style.height = "0%";
                 document.getElementById(divOpened).style.height = "100%";
             }
-            
+
             //Used to pop a new tab with the new vf page
             function popVFPage()
             {
-                var newURL = __new_PDF_Link;
-                window.open(newURL , '_blank'); 
+                var newURL = __NEW_PDF_LINK;
+                window.open(newURL , '_blank');
                 document.getElementById("loadingBox").style.height = "0%";
                 $('.circle-loader').addClass('load-complete');
                 $('#upload-button').show();
                 $('#tableHolder').show();
                 $('#tableName').show();
-                __created_PdfPage_Count = 0;
-                __profilesSelected = '';
+                __PROFILES_SELECTED = '';
             }
-            
+
+            //This function is utilized to setup the checkboxes for the profiles
             function setupCheckBoxes()
             {
+                //Finding the profile errors element so we append our profile checkboxes above it
                 var profileErrors = document.getElementById("profileErrors");
 
-                
-                for(var p = 0; p < __profileNames.length; p++)
+                for(var p = 0; p < __PROFILE_NAMES.length; p++)
                 {
                     var linebreak = document.createElement("br");
                     var container = document.getElementById('profileNames');
                     var checkbox = document.createElement('input');
                     checkbox.type = "checkbox";
-                    checkbox.name = __profileNames[p];
-                    checkbox.value =  __profileNames[p];
-                    checkbox.id =  __profileNames[p];
+                    checkbox.name = __PROFILE_NAMES[p];
+                    checkbox.value =  __PROFILE_NAMES[p];
+                    checkbox.id =  __PROFILE_NAMES[p];
                     checkbox.className =  'profRows';
-                    
-                    var label = document.createElement('label')
-                    label.htmlFor =  __profileNames[p];
-                    label.appendChild(document.createTextNode( __profileNames[p]));
+
+                    var label = document.createElement('label');
+                    label.htmlFor =  __PROFILE_NAMES[p];
+                    label.appendChild(document.createTextNode( __PROFILE_NAMES[p]));
                     label.className =  'profRows';
                     label.style = "color:white; padding: 10px 15px 10px 10px";
-                    
+
                     container.appendChild(checkbox);
                     container.appendChild(label);
 
                     container.insertBefore(linebreak, profileErrors);
                     container.insertBefore(label, linebreak);
                     container.insertBefore(checkbox, label);
-
-
                 }
             }
-            
+
             function grabSelectedProfiles()
             {
                 $("input:checkbox[type=checkbox]:checked").each(function()
                 {
-                    __profilesSelected += $(this).val() + ',';
-                    
+                    if($(this).val().toLowerCase() !==  'select all profiles')
+                    {
+                        __PROFILES_SELECTED += $(this).val() + ',';
+                    }
                 });
 
-                switchNav('profileSelection','infoBox');                
+                switchNav('profileSelection','infoBox');
             }
 
             function setupPage()
             {
-                __profileNames = '{!profileNames}'.replace("[", "").replace("]", "").split(",");
+                __PROFILE_NAMES = '{!profileNames}'.replace("[", "").replace("]", "").split(",");
                 setupCheckBoxes();
                 loadPDFTable();
             }
@@ -663,7 +696,6 @@
                     });
             }
 
-            
             function buildTable(queryResult)
             {
                 $("#tableHolder").empty();
@@ -689,10 +721,18 @@
                 }
             }
 
+            function pdfGenerationFailure(errorMsg)
+            {
+                $('.circle-loader').addClass('load-fail');
+                $('#conversion-info').html(errorMsg);
+                $('#failButton').show();
+                deleteConvertedPDF();
+            }
+
 
             </script>
-              
+
         </body>
-    
+
     </html>
 </apex:page>
